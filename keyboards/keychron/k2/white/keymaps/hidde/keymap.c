@@ -108,9 +108,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
       KC_ESC,     KC_F1,      KC_F2,      KC_F3,      KC_F4,      KC_F5,      KC_F6,      KC_F7,      KC_F8,      KC_F9,      KC_F10,     KC_F11,     KC_F12,     KC_PSCR,    KC_DEL,     BL_TOGG  ,
       KC_GRV,     KC_1,       KC_2,       KC_3,       KC_4,       KC_5,       KC_6,       KC_7,       KC_8,       KC_9,       KC_0,       KC_MINS,    KC_EQL,     KC_BSPC,                KC_PGUP  ,
       KC_TAB,     KC_Q,       KC_W,       KC_E,       KC_R,       KC_T,       KC_Y,       KC_U,       KC_I,       KC_O,       KC_P,       KC_LBRC,    KC_RBRC,    KC_BSLS,                KC_PGDN  ,
-      KC_CAPS,    LGUI_T(KC_A), LALT_T(KC_S), LCTL_T(KC_D), LSFT_T(KC_F),     KC_G,       KC_H,       RSFT_T(KC_J), RCTL_T(KC_K), LALT_T(KC_L), RGUI_T(KC_SCLN),  KC_QUOT,                KC_ENT,                 KC_HOME  ,
-      _______,                KC_Z,       KC_X,       KC_C,       KC_V,       KC_B,       KC_N,       KC_M,       KC_COMM,    KC_DOT,     KC_SLSH,                _______,    KC_UP,      KC_END   ,
-      _______,    _______,    _______,                                        KC_SPC,                                         _______,    MO(WIN_FN), _______,    KC_LEFT,    KC_DOWN,    KC_RGHT
+      XXXXXXX,    LGUI_T(KC_A), LALT_T(KC_S), LCTL_T(KC_D), LSFT_T(KC_F),     KC_G,       KC_H,       RSFT_T(KC_J), RCTL_T(KC_K), LALT_T(KC_L), RGUI_T(KC_SCLN),  KC_QUOT,                KC_ENT,                 KC_HOME  ,
+      XXXXXXX,                KC_Z,       KC_X,       KC_C,       KC_V,       KC_B,       KC_N,       KC_M,       KC_COMM,    KC_DOT,     KC_SLSH,                XXXXXXX,    KC_UP,      KC_END   ,
+      XXXXXXX,    XXXXXXX,    XXXXXXX,                                        KC_SPC,                                         KC_N,       MO(WIN_FN), XXXXXXX,    KC_LEFT,    KC_DOWN,    KC_RGHT
   ),
 
   /*
@@ -132,21 +132,43 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   /*  0           1           2           3           4           5           6           7           8           9           10          11          12          13          14          15       */
       RESET,      KC_BRID,    KC_BRIU,    KC_TASK,    KC_FLXP,    BL_DEC,     BL_INC,     KC_MPRV,    KC_MPLY,    KC_MNXT,    KC_MUTE,    KC_VOLD,    KC_VOLU,    _______,    KC_INS,     BL_STEP  ,
       _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,                _______  ,
-      _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,                _______  ,
-      _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,                _______,                _______  ,
+      _______,    _______,    _______,    _______,    _______,    _______,    _______,    KC_HOME,    KC_END,     KC_PGUP,    KC_PGDN,    _______,    _______,    _______,                _______  ,
+      _______,    _______,    _______,    _______,    _______,    _______,    _______,    KC_LEFT,    KC_RGHT,    KC_UP,      KC_DOWN,    _______,                _______,                _______  ,
       _______,                _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,                _______,    _______,    _______  ,
       _______,    _______,    _______,                                        _______,                                        _______,    _______,    _______,    _______,    _______,    _______
   )
 };
+
+enum combo_events {
+  COMBO_CAPS,
+  COMBO_NAV,
+  COMBO_LENGTH
+};
+uint16_t COMBO_LEN = COMBO_LENGTH;
+
+const uint16_t PROGMEM combo_caps[] = {KC_F, KC_J, COMBO_END};
+const uint16_t PROGMEM combo_nav[] = {KC_D, KC_K, COMBO_END};
+combo_t key_combos[] = {
+    [COMBO_CAPS] = COMBO(combo_caps, KC_CAPS),
+    [COMBO_NAV] = COMBO(combo_nav, TG(MAC_FN)),
+};
+
+bool combo_should_trigger(uint16_t combo_index, combo_t *combo, uint16_t keycode, keyrecord_t *record) {
+    return
+        (combo_index == COMBO_CAPS && layer_state_is(MAC_BASE)) ||
+        combo_index == COMBO_NAV;
+}
 
 bool dip_switch_update_user(uint8_t index, bool active) {
   switch(index) {
     case 0: // OS switch
       if (active) { // Mac/iOS mode
         layer_move(MAC_BASE);
+        combo_enable();
       }
       else { // Windows/Android mode
         layer_move(WIN_BASE);
+        combo_disable();
       }
       break;
     case 1: // Connection switch
